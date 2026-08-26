@@ -1,0 +1,14 @@
+{
+  "dynamic": {
+    "accuracy": 0.7575104166666666,
+    "accuracy_std": 0.025574864148520473
+  },
+  "static_current_only": {
+    "accuracy": 0.5001666666666666,
+    "accuracy_std": 0.00494255191621134
+  },
+  "exact_digital_delay_oracle": {
+    "accuracy": 1.0,
+    "accuracy_std": 0.0
+  }
+}
