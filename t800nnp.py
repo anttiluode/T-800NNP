@@ -142,6 +142,92 @@ class T800:
 
 
 @dataclass
+class DelayedLocalStructuralRouter:
+    """Local bounded routing with a literal delayed feature-address trace.
+
+    A consequence delivered now is applied to the receiver feature vector that
+    existed `consequence_delay` steps ago. There is no reverse traversal through
+    the intervening dynamics: the old local address is simply retained long
+    enough to receive later credit.
+    """
+
+    n_features: int
+    n_lanes: int = 2
+    seed: int = 0
+    learning_rate: float = 0.001
+    consequence_delay: int = 6
+    structural_budget: float = 20.0
+
+    def __post_init__(self) -> None:
+        rng = np.random.default_rng(self.seed)
+        self.weight = rng.normal(scale=0.02, size=(self.n_lanes, self.n_features))
+        self._feature_queue: deque[Array] = deque(maxlen=self.consequence_delay + 1)
+
+    def step(self, phi: Array, delayed_target: Array | None = None, learn: bool = True) -> Array:
+        phi = np.asarray(phi, dtype=float)
+        y = self.weight @ phi
+        self._feature_queue.append(phi.copy())
+
+        if delayed_target is not None and len(self._feature_queue) == self.consequence_delay + 1:
+            credited_phi = self._feature_queue[0]
+            credited_y = self.weight @ credited_phi
+            err = np.asarray(delayed_target, dtype=float) - credited_y
+            if learn:
+                for lane in range(self.n_lanes):
+                    proposal = self.weight[lane] + self.learning_rate * err[lane] * credited_phi
+                    self.weight[lane] = _project_l1(proposal, self.structural_budget)
+        return y
+
+    @property
+    def used_capacity(self) -> Array:
+        return np.sum(np.abs(self.weight), axis=1)
+
+
+@dataclass
+class ContinuousT800:
+    """T-800 variant with no episode boundary and delayed local consequence.
+
+    The receiver bank is intended to run for the lifetime of one stream. There
+    is deliberately no episode-reset method here. Hidden changes in the world
+    must be inferred from continuing traffic rather than signaled by resets.
+    """
+
+    n_receivers: int = 40
+    n_lanes: int = 2
+    seed: int = 0
+    dynamic: bool = True
+    consequence_delay: int = 6
+    learning_rate: float = 0.001
+
+    def __post_init__(self) -> None:
+        self.receivers = DynamicReceiverBank(self.n_receivers, self.seed, self.dynamic)
+        self.router = DelayedLocalStructuralRouter(
+            self.receivers.n_features,
+            self.n_lanes,
+            self.seed + 1009,
+            learning_rate=self.learning_rate,
+            consequence_delay=self.consequence_delay,
+        )
+
+    def step(
+        self,
+        x: float,
+        delayed_route_target: int | None = None,
+        learn: bool = True,
+    ) -> dict[str, Array | int]:
+        phi = self.receivers.step(x)
+        target = None
+        if delayed_route_target is not None:
+            target = -np.ones(self.n_lanes)
+            target[int(delayed_route_target)] = 1.0
+        score = self.router.step(phi, delayed_target=target, learn=learn)
+        lane = int(np.argmax(score))
+        routed_event = np.zeros(self.n_lanes)
+        routed_event[lane] = float(x)
+        return {"phi": phi, "score": score, "lane": lane, "routed_event": routed_event}
+
+
+@dataclass
 class LeakySignalReceiver:
     """Minimal AIS-like receiver showing that continuation is receiver-relative."""
 
