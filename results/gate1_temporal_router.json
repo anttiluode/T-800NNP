@@ -1,0 +1,22 @@
+{
+  "dynamic": {
+    "route_accuracy": 0.8823378378378379,
+    "route_accuracy_std": 0.018945738711902055,
+    "pulse_preservation": 0.880512958729808,
+    "pulse_preservation_std": 0.03828280147840924,
+    "routed_waveform_f1": 0.880512958729808,
+    "routed_waveform_f1_std": 0.03828280147840924,
+    "mean_used_capacity": 8.201551200683072,
+    "mean_used_capacity_std": 1.0423348581699834
+  },
+  "static_current_only": {
+    "route_accuracy": 0.514418918918919,
+    "route_accuracy_std": 0.035668306466586024,
+    "pulse_preservation": 0.5182500730560594,
+    "pulse_preservation_std": 0.03203506632983649,
+    "routed_waveform_f1": 0.5182500730560594,
+    "routed_waveform_f1_std": 0.03203506632983649,
+    "mean_used_capacity": 1.0865978648320929,
+    "mean_used_capacity_std": 0.1431858806726017
+  }
+}
