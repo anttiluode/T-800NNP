@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>T-800NNP — Trains Carve Routes</title>
+<style>
+  :root{--bg:#070a0d;--panel:#0d1318;--panel2:#101920;--line:#24323d;--text:#e8f0f4;--muted:#81929f;--hot:#ff4b3e;--cyan:#50d7ff;--good:#74f29a;--warn:#ffd166}
+  *{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at 50% -20%,#18252d 0,#090d11 35%,#050709 75%);color:var(--text);font-family:ui-monospace,SFMono-Regular,Consolas,monospace;min-height:100vh}
+  .wrap{max-width:1180px;margin:auto;padding:28px 18px 54px}.top{display:flex;gap:20px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap}.eyebrow{font-size:12px;letter-spacing:.18em;color:var(--hot)}h1{font-size:clamp(30px,5vw,60px);margin:5px 0 2px;letter-spacing:-.055em;line-height:.95}.sub{max-width:760px;color:#a7b6c0;line-height:1.55;font-size:14px}.chips{display:flex;gap:8px;flex-wrap:wrap}.chip{border:1px solid var(--line);background:#091017;padding:7px 9px;border-radius:999px;font-size:11px;color:#9fb0ba}.chip b{color:var(--good)}
+  .hero{margin-top:24px;border:1px solid #26343d;border-radius:18px;overflow:hidden;background:linear-gradient(180deg,rgba(17,26,33,.95),rgba(8,12,15,.98));box-shadow:0 28px 80px rgba(0,0,0,.4)}
+  .toolbar{padding:12px;border-bottom:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap;align-items:center}.toolbar .spacer{flex:1}.btn{border:1px solid #31414d;background:#101820;color:#dce7ed;border-radius:8px;padding:9px 11px;font:inherit;font-size:12px;cursor:pointer}.btn:hover{border-color:#5d7485;background:#15212a}.btn.hot{border-color:#6a2825;color:#ff8a82}.btn.good{border-color:#225b36;color:#8bffad}.btn.on{box-shadow:inset 0 0 0 1px #50d7ff;color:#9ceaff}.status{font-size:11px;color:var(--muted);padding:0 5px}
+  .machine{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:0;min-height:410px}.zone{padding:22px;border-right:1px solid var(--line);position:relative}.zone:last-child{border-right:0}.label{font-size:10px;letter-spacing:.16em;color:#70828e;margin-bottom:15px}.family{font-size:34px;font-weight:800;letter-spacing:-.04em}.family.a{color:var(--cyan)}.family.b{color:var(--warn)}.rule{font-size:12px;color:#92a4af;margin-top:3px}.current{display:flex;align-items:center;gap:12px;margin-top:25px}.pulse{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;border:1px solid #31404b;background:#080c0f;font-size:20px;transition:.12s}.pulse.on{background:var(--hot);border-color:#ff8b83;box-shadow:0 0 28px rgba(255,75,62,.5)}.nowtext{color:#7f929e;font-size:11px}.train{height:100px;display:flex;align-items:flex-end;gap:3px;margin-top:18px;padding-bottom:1px;border-bottom:1px solid #26343d;overflow:hidden}.bit{width:9px;min-width:4px;border-radius:2px 2px 0 0;background:#30414c;transition:.1s}.bit.on{height:72px;background:linear-gradient(var(--hot),#732823);box-shadow:0 0 8px rgba(255,75,62,.22)}.bit.off{height:5px}.legend{font-size:11px;color:#71838f;margin-top:9px}
+  .receiverTitle{display:flex;justify-content:space-between;align-items:center}.receiverTitle strong{font-size:14px}.receiverTitle span{font-size:10px;color:#71838f}.receivers{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;margin-top:18px}.cell{height:45px;border:1px solid #26333c;border-radius:5px;background:#080c0f;position:relative;overflow:hidden}.cell i{position:absolute;bottom:0;left:0;right:0;height:0;background:linear-gradient(#50d7ff,#173d4a);transition:height .09s}.cell.hot i{background:linear-gradient(#ff6a60,#57221f)}.equation{margin-top:16px;padding:12px;border:1px solid #25343d;border-radius:8px;background:#080d11;font-size:11px;color:#879aa6;line-height:1.6}.equation b{color:#d9e5ea}
+  .lanes{display:flex;flex-direction:column;gap:18px;margin-top:25px}.lane{border:1px solid #293944;border-radius:10px;padding:12px;position:relative;overflow:hidden}.lane.selected{border-color:#617b8d;box-shadow:0 0 25px rgba(80,215,255,.08)}.laneHead{display:flex;justify-content:space-between;font-size:12px}.laneVal{font-weight:800}.track{height:10px;background:#080c0f;border-radius:999px;margin-top:10px;overflow:hidden}.track i{display:block;height:100%;width:50%;background:var(--cyan);transition:.12s}.lane:nth-child(2) .track i{background:var(--warn)}.outpulse{position:absolute;width:13px;height:13px;border-radius:50%;right:12px;bottom:10px;background:#1a262d;border:1px solid #384d5a}.lane.fire .outpulse{background:var(--hot);border-color:#ff8b83;box-shadow:0 0 18px rgba(255,75,62,.7)}.meaning{margin-top:26px;border-top:1px dashed #293944;padding-top:15px;color:#81939f;font-size:11px;line-height:1.7}.meaning b{color:#dce7ed}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line)}.stat{padding:15px 18px;border-right:1px solid var(--line)}.stat:last-child{border-right:0}.stat .k{font-size:10px;letter-spacing:.11em;color:#70828e}.stat .v{font-size:25px;font-weight:800;margin-top:4px}.stat .small{font-size:10px;color:#71838f;margin-top:3px}.goodtxt{color:var(--good)}.badtxt{color:#ff8077}
+  .story{display:grid;grid-template-columns:1.15fr .85fr;gap:16px;margin-top:18px}.card{border:1px solid #22313a;border-radius:13px;background:rgba(12,18,23,.82);padding:18px}.card h2{font-size:17px;margin:0 0 9px}.card p{font-family:system-ui,sans-serif;color:#a4b3bc;line-height:1.55;font-size:13px;margin:8px 0}.witness{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin-top:14px}.mini{background:#080d11;border:1px solid #24343e;border-radius:9px;padding:12px}.mini .bits{font-size:13px;letter-spacing:.18em;color:#a9bac4;white-space:nowrap;overflow:hidden}.mini strong{font-size:12px}.arrow{color:#647985}.verdict{font-size:12px;margin-top:8px;color:#7e919e}.verdict b{color:#fff}.foot{margin-top:16px;color:#62737e;font-size:11px;line-height:1.6}.code{font-size:11px;background:#070b0e;border:1px solid #22313a;border-radius:9px;padding:12px;line-height:1.7;color:#93a6b1}.code b{color:#e1ebef}
+  @media(max-width:850px){.machine{grid-template-columns:1fr}.zone{border-right:0;border-bottom:1px solid var(--line)}.stats{grid-template-columns:1fr 1fr}.stat:nth-child(2){border-right:0}.story{grid-template-columns:1fr}.witness{grid-template-columns:1fr}.arrow{transform:rotate(90deg);text-align:center}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div><div class="eyebrow">T-800NNP / LIVE STATIC DEMO</div><h1>TRAINS CARVE ROUTES</h1></div>
+    <div class="chips"><span class="chip"><b>●</b> NO BACKPROP</span><span class="chip"><b>●</b> CONTINUOUS STATE</span><span class="chip"><b>●</b> 100% CLIENT SIDE</span></div>
+  </div>
+  <div class="sub">Two sources have the same instantaneous pulse probability. Only their temporal dynamics differ. The receiver carries history in its own state, learns a bounded routing structure, and forwards the original pulse down the lane it currently believes is correct.</div>
+
+  <section class="hero">
+    <div class="toolbar">
+      <button class="btn good" id="runBtn">▶ RUN</button>
+      <button class="btn" id="aBtn">SEND PERSISTENT</button>
+      <button class="btn" id="bBtn">SEND ALTERNATING</button>
+      <button class="btn hot" id="flipBtn">⇄ FLIP MEANING</button>
+      <button class="btn" id="fastBtn">⚡ FAST LEARN ×40</button>
+      <button class="btn on" id="learnBtn">LEARNING ON</button>
+      <span class="spacer"></span><span class="status" id="status">pretraining local structure…</span>
+    </div>
+
+    <div class="machine">
+      <div class="zone">
+        <div class="label">01 / INCOMING TRAIN</div>
+        <div id="family" class="family a">PERSISTENT</div>
+        <div id="familyRule" class="rule">90% chance to keep previous bit</div>
+        <div class="current"><div id="pulse" class="pulse">0</div><div class="nowtext">CURRENT EVENT<br><b id="sameHint">history is elsewhere</b></div></div>
+        <div id="train" class="train"></div>
+        <div class="legend">Both families have stationary P(x=1) ≈ 0.5. A current-only learner cannot tell them apart.</div>
+      </div>
+
+      <div class="zone">
+        <div class="label">02 / RECEIVER-CARRIED HISTORY</div>
+        <div class="receiverTitle"><strong>40 persistent local states</strong><span id="stateMean">mean 0.000</span></div>
+        <div id="receivers" class="receivers"></div>
+        <div class="equation"><b>qᵢ(t+1)</b> = aᵢ qᵢ(t) + (1-aᵢ)x(t)<br><b>φᵢ(t)</b> = tanh(local mix of x, q, xq, transition)<br><b>Δw</b> = η · local consequence · φ &nbsp;→&nbsp; project to finite L1 capacity</div>
+      </div>
+
+      <div class="zone">
+        <div class="label">03 / RECEIVER CHOOSES CONTINUATION</div>
+        <div class="lanes">
+          <div class="lane" id="lane0"><div class="laneHead"><span>LANE 0 <b id="lane0Meaning"></b></span><span class="laneVal" id="score0">0.00</span></div><div class="track"><i id="bar0"></i></div><span class="outpulse"></span></div>
+          <div class="lane" id="lane1"><div class="laneHead"><span>LANE 1 <b id="lane1Meaning"></b></span><span class="laneVal" id="score1">0.00</span></div><div class="track"><i id="bar1"></i></div><span class="outpulse"></span></div>
+        </div>
+        <div class="meaning" id="meaningText"></div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="k">RECENT ROUTE ACCURACY</div><div class="v" id="acc">—</div><div class="small">after 7-step warmup</div></div>
+      <div class="stat"><div class="k">STRUCTURAL CAPACITY USED</div><div class="v" id="capacity">—</div><div class="small">mean lane L1 norm / 20</div></div>
+      <div class="stat"><div class="k">EPISODES LEARNED</div><div class="v" id="episodes">0</div><div class="small">weights persist; receiver state does not reset on firing</div></div>
+      <div class="stat"><div class="k">BACKPROP STEPS</div><div class="v goodtxt">0</div><div class="small">no graph, no autograd, no BPTT</div></div>
+    </div>
+  </section>
+
+  <div class="story">
+    <div class="card">
+      <h2>Same pulse now. Different history. Different route.</h2>
+      <p>This is the cleanest thing to show tonight. Press the button below: two copies of the <em>same learned router</em> receive different histories, then both receive the same final pulse <b>1</b>. Their present input is identical; only receiver state differs.</p>
+      <button class="btn good" id="witnessBtn">RUN SAME-PULSE WITNESS</button>
+      <div class="witness">
+        <div class="mini"><strong>PERSISTENT HISTORY</strong><div class="bits" id="wa">—</div><div class="verdict" id="wav">route: —</div></div>
+        <div class="arrow">→ SAME FINAL 1 →</div>
+        <div class="mini"><strong>ALTERNATING HISTORY</strong><div class="bits" id="wb">—</div><div class="verdict" id="wbv">route: —</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>What the page is actually doing</h2>
+      <div class="code"><b>input event</b> → 40 leaky receiver states<br>→ fixed local nonlinear coordinates<br>→ 2 bounded local routing vectors<br>→ argmax lane<br>→ <b>forward the original event unchanged</b><br><br>Training: local delta update only.<br>Everything here runs in this HTML file.</div>
+      <p>Hit <b>FLIP MEANING</b>. The previously learned structure becomes actively wrong. Leave learning on or use <b>FAST LEARN ×40</b> and watch the route recover without replacing the architecture.</p>
+    </div>
+  </div>
+  <div class="foot">T-800NNP is a falsification-first architecture experiment, not a biological neuron simulator and not a claim of superiority to RNNs/SSMs. The Python gate receipt for this operation is ~0.882 route accuracy versus ~0.514 for the current-only control over 10 seeds.</div>
+</div>
+<script>
+(function(){
+  function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296}}
+  class RNG{constructor(seed){this.r=mulberry32(seed>>>0);this.spare=null}u(){return this.r()}normal(){if(this.spare!==null){let z=this.spare;this.spare=null;return z}let u=0,v=0;while(!u)u=this.u();while(!v)v=this.u();let m=Math.sqrt(-2*Math.log(u)),a=2*Math.PI*v;this.spare=m*Math.sin(a);return m*Math.cos(a)}}
+  function dot(a,b){let s=0;for(let i=0;i<a.length;i++)s+=a[i]*b[i];return s}
+  function projectL1(v,budget){let sum=v.reduce((s,x)=>s+Math.abs(x),0);if(sum<=budget)return v;let u=v.map(Math.abs).sort((a,b)=>b-a),css=0,rho=0,theta=0;for(let i=0;i<u.length;i++){css+=u[i];let th=(css-budget)/(i+1);if(u[i]-th>0){rho=i+1;theta=th}}return v.map(x=>Math.sign(x)*Math.max(Math.abs(x)-theta,0))}
+  class Bank{
+    constructor(seed=7,dynamic=true){this.n=40;this.dynamic=dynamic;let r=new RNG(seed);this.decay=[],this.state=new Array(this.n).fill(0),this.gain=[],this.mix=[],this.bias=[];for(let i=0;i<this.n;i++){this.decay.push(dynamic?.15+.835*r.u():0);this.gain.push(.8+1.2*r.u());this.mix.push([r.normal(),r.normal(),r.normal(),r.normal()]);this.bias.push(.15*r.normal())}}
+    reset(){this.state.fill(0)}
+    step(x){let old=this.state.slice(),tr=[],phis=[];for(let i=0;i<this.n;i++){this.state[i]=this.decay[i]*this.state[i]+(1-this.decay[i])*x;tr[i]=this.dynamic?x-old[i]:0;let local=[x,this.state[i],x*this.state[i],tr[i]],s=0;for(let k=0;k<4;k++)s+=this.mix[i][k]*local[k];phis.push(Math.tanh(this.gain[i]*s+this.bias[i]))}let mean=this.state.reduce((a,b)=>a+b,0)/this.n,mt=tr.reduce((a,b)=>a+Math.abs(b),0)/this.n;return [x,mean,mt,...phis]}
+    clone(){let b=Object.create(Bank.prototype);b.n=this.n;b.dynamic=this.dynamic;b.decay=this.decay.slice();b.state=this.state.slice();b.gain=this.gain.slice();b.mix=this.mix.map(x=>x.slice());b.bias=this.bias.slice();return b}
+  }
+  class Router{
+    constructor(seed=1016){let r=new RNG(seed);this.nf=43;this.lr=.0015;this.budget=20;this.w=[[],[]];for(let l=0;l<2;l++)for(let i=0;i<this.nf;i++)this.w[l].push(.02*r.normal())}
+    step(phi,target=null,learn=true){let y=[dot(this.w[0],phi),dot(this.w[1],phi)];if(target&&learn){for(let l=0;l<2;l++){let e=target[l]-y[l],p=this.w[l].map((w,i)=>w+this.lr*e*phi[i]);this.w[l]=projectL1(p,this.budget)}}return y}
+    used(){return this.w.map(a=>a.reduce((s,x)=>s+Math.abs(x),0))}
+    clone(){let r=Object.create(Router.prototype);r.nf=this.nf;r.lr=this.lr;r.budget=this.budget;r.w=this.w.map(x=>x.slice());return r}
+  }
+  class Model{constructor(seed=7){this.bank=new Bank(seed,true);this.router=new Router(seed+1009)}resetFast(){this.bank.reset()}step(x,targetKind=null,learn=true){let phi=this.bank.step(x),target=null;if(targetKind!==null){target=[-1,-1];target[targetKind]=1}let score=this.router.step(phi,target,learn),lane=score[1]>score[0]?1:0;return{phi,score,lane}}}
+  function makeTrain(kind,len=44,rng=visRng){let a=[rng.u()<.5?0:1],p=kind===0?.90:.10;for(let i=1;i<len;i++){let stay=rng.u()<p;a.push(stay?a[i-1]:1-a[i-1])}return a}
+
+  const cellsEl=document.getElementById('receivers');for(let i=0;i<40;i++){let d=document.createElement('div');d.className='cell';d.innerHTML='<i></i>';cellsEl.appendChild(d)}
+  const cellEls=[...document.querySelectorAll('.cell')];let visRng=new RNG(424242),model,mapping=[0,1],learning=true,running=false,timer=null,kind=0,train=[],t=0,episodes=0,recent=[],pretrained=false;
+  const warm=7;
+  function expectedLane(k){return mapping[k]}
+  function targetFor(k){return expectedLane(k)}
+  function trainEpisode(k=null){if(k===null)k=visRng.u()<.5?0:1;let xs=makeTrain(k,44,visRng);model.resetFast();for(let i=0;i<xs.length;i++)model.step(xs[i],i>=warm?targetFor(k):null,true);episodes++}
+  function pretrain(n){for(let i=0;i<n;i++)trainEpisode();pretrained=true;updateStats()}
+  function newVisualEpisode(forced=null){kind=forced===null?(visRng.u()<.5?0:1):forced;train=makeTrain(kind,44,visRng);t=0;model.resetFast();renderFamily();renderTrain()}
+  function renderFamily(){let f=document.getElementById('family');f.textContent=kind===0?'PERSISTENT':'ALTERNATING';f.className='family '+(kind===0?'a':'b');document.getElementById('familyRule').textContent=kind===0?'90% chance to keep previous bit':'90% chance to change previous bit'}
+  function renderTrain(){let el=document.getElementById('train');el.innerHTML='';let start=Math.max(0,t-25);for(let i=start;i<Math.min(train.length,start+26);i++){let b=document.createElement('span');b.className='bit '+(train[i]?'on':'off');b.style.opacity=i<=t?1:.18;el.appendChild(b)}}
+  function updateReceiver(){for(let i=0;i<40;i++){let s=Math.max(0,Math.min(1,model.bank.state[i]));cellEls[i].querySelector('i').style.height=(s*100)+'%';cellEls[i].classList.toggle('hot',s>.7)}let m=model.bank.state.reduce((a,b)=>a+b,0)/40;document.getElementById('stateMean').textContent='mean '+m.toFixed(3)}
+  function setMeaning(){document.getElementById('lane0Meaning').textContent='= '+(mapping[0]===0?'PERSISTENT':'ALTERNATING');document.getElementById('lane1Meaning').textContent='= '+(mapping[0]===1?'PERSISTENT':'ALTERNATING');document.getElementById('meaningText').innerHTML='Current learned rule target:<br><b>PERSISTENT → lane '+mapping[0]+'</b><br><b>ALTERNATING → lane '+mapping[1]+'</b>'}
+  function updateStats(){let a=recent.length?recent.reduce((x,y)=>x+y,0)/recent.length:null,acc=document.getElementById('acc');acc.textContent=a===null?'—':(100*a).toFixed(1)+'%';acc.className='v '+(a===null?'':a>.72?'goodtxt':a<.55?'badtxt':'');let u=model.router.used(),cap=(u[0]+u[1])/2;document.getElementById('capacity').textContent=cap.toFixed(1);document.getElementById('episodes').textContent=episodes;document.getElementById('status').textContent=(learning?'learning':'frozen')+' · mapping '+mapping[0]+' / '+mapping[1]}
+  function visualStep(){if(t>=train.length){episodes++;newVisualEpisode();return}let x=train[t],target=t>=warm?targetFor(kind):null,out=model.step(x,target,learning);let p=document.getElementById('pulse');p.textContent=x;p.classList.toggle('on',!!x);document.getElementById('score0').textContent=out.score[0].toFixed(2);document.getElementById('score1').textContent=out.score[1].toFixed(2);let lo=Math.min(out.score[0],out.score[1]),hi=Math.max(out.score[0],out.score[1]),span=Math.max(.25,hi-lo);document.getElementById('bar0').style.width=(15+70*(out.score[0]-lo)/span)+'%';document.getElementById('bar1').style.width=(15+70*(out.score[1]-lo)/span)+'%';for(let l=0;l<2;l++){let e=document.getElementById('lane'+l);e.classList.toggle('selected',out.lane===l);e.classList.toggle('fire',out.lane===l&&x===1)}if(t>=warm){recent.push(out.lane===expectedLane(kind)?1:0);if(recent.length>160)recent.shift()}updateReceiver();updateStats();renderTrain();t++}
+  function setRun(v){running=v;document.getElementById('runBtn').textContent=v?'❚❚ PAUSE':'▶ RUN';if(timer)clearInterval(timer);timer=v?setInterval(visualStep,90):null}
+  function fastLearn(n=40){let was=running;setRun(false);for(let i=0;i<n;i++)trainEpisode();recent=[];newVisualEpisode();updateStats();if(was)setRun(true)}
+  function resetAll(){setRun(false);visRng=new RNG(424242);model=new Model(7);mapping=[0,1];episodes=0;recent=[];learning=true;document.getElementById('learnBtn').textContent='LEARNING ON';document.getElementById('learnBtn').classList.add('on');pretrain(450);newVisualEpisode(0);setMeaning();document.getElementById('status').textContent='ready · pretrained 450 episodes'}
+  function samePulseWitness(){let histories=[[1,1,1,1,0,0,0,1,1,1,1],[1,0,1,0,1,0,1,0,1,0,1]],ids=['wa','wb'],vs=['wav','wbv'];for(let h=0;h<2;h++){let b=model.bank.clone(),r=model.router.clone(),seq=histories[h].slice();seq[seq.length-1]=1;let out=null;for(let x of seq){let phi=b.step(x),sc=r.step(phi,null,false);out={lane:sc[1]>sc[0]?1:0,score:sc}}document.getElementById(ids[h]).textContent=seq.join(' ');let fam=h===0?0:1,ok=out.lane===expectedLane(fam);document.getElementById(vs[h]).innerHTML='route: <b>LANE '+out.lane+'</b> · '+(ok?'matches learned temporal class':'ambiguous on this sample')+' · score '+out.score[out.lane].toFixed(2)}}
+  document.getElementById('runBtn').onclick=()=>setRun(!running);
+  document.getElementById('aBtn').onclick=()=>{setRun(false);newVisualEpisode(0);visualStep()};
+  document.getElementById('bBtn').onclick=()=>{setRun(false);newVisualEpisode(1);visualStep()};
+  document.getElementById('fastBtn').onclick=()=>fastLearn(40);
+  document.getElementById('flipBtn').onclick=()=>{mapping=[mapping[1],mapping[0]];recent=[];setMeaning();newVisualEpisode();updateStats();document.getElementById('status').textContent='meaning flipped — old structure is now wrong'};
+  document.getElementById('learnBtn').onclick=()=>{learning=!learning;let b=document.getElementById('learnBtn');b.textContent=learning?'LEARNING ON':'LEARNING FROZEN';b.classList.toggle('on',learning);updateStats()};
+  document.getElementById('witnessBtn').onclick=samePulseWitness;
+  resetAll();samePulseWitness();setRun(true);
+})();
+</script>
+</body>
+</html>
