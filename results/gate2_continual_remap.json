@@ -1,0 +1,12 @@
+{
+  "old_mapping_accuracy": 0.8750675675675675,
+  "old_mapping_accuracy_std": 0.012288198296941355,
+  "new_mapping_before_relearning": 0.12038288288288287,
+  "new_mapping_before_relearning_std": 0.015639374323111768,
+  "new_mapping_after_relearning": 0.8068243243243243,
+  "new_mapping_after_relearning_std": 0.06520739375366948,
+  "episodes_to_80pct": 128.33333333333334,
+  "episodes_to_80pct_std": 43.65266951236265,
+  "used_capacity": 5.423006629938007,
+  "used_capacity_std": 0.20359728187072967
+}
