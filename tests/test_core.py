@@ -1,7 +1,14 @@
 import unittest
 import numpy as np
 
-from t800nnp import DynamicReceiverBank, LeakySignalReceiver, LocalStructuralRouter, T800
+from t800nnp import (
+    ContinuousT800,
+    DelayedLocalStructuralRouter,
+    DynamicReceiverBank,
+    LeakySignalReceiver,
+    LocalStructuralRouter,
+    T800,
+)
 
 
 class CoreTests(unittest.TestCase):
@@ -31,6 +38,32 @@ class CoreTests(unittest.TestCase):
         for _ in range(3):
             r.step(1.0)
         self.assertEqual(r.step(0.0), 1.0)
+
+    def test_delayed_router_waits_for_old_local_address(self):
+        r = DelayedLocalStructuralRouter(
+            n_features=3,
+            n_lanes=2,
+            seed=4,
+            learning_rate=0.1,
+            consequence_delay=2,
+            structural_budget=2.0,
+        )
+        before = r.weight.copy()
+        r.step(np.array([1.0, 0.0, 0.0]), delayed_target=np.array([1.0, -1.0]))
+        r.step(np.array([0.0, 1.0, 0.0]), delayed_target=np.array([1.0, -1.0]))
+        self.assertTrue(np.allclose(before, r.weight))
+        r.step(np.array([0.0, 0.0, 1.0]), delayed_target=np.array([1.0, -1.0]))
+        self.assertFalse(np.allclose(before, r.weight))
+        self.assertTrue(np.all(r.used_capacity <= 2.0 + 1e-9))
+
+    def test_continuous_t800_has_no_episode_reset_in_step(self):
+        m = ContinuousT800(n_receivers=8, seed=5, consequence_delay=2)
+        for x in [1.0, 1.0, 0.0, 1.0, 0.0]:
+            m.step(x, delayed_route_target=None, learn=False)
+        state_before = m.receivers.state.copy()
+        m.step(0.0, delayed_route_target=None, learn=False)
+        self.assertGreater(np.linalg.norm(state_before), 0.0)
+        self.assertGreater(np.linalg.norm(m.receivers.state), 0.0)
 
 
 if __name__ == "__main__":
