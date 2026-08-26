@@ -1,0 +1,43 @@
+{
+  "dynamic_no_reset": {
+    "route_accuracy": 0.8828664332166083,
+    "route_accuracy_std": 0.011919388741738658,
+    "settled_route_accuracy": 0.8847883357937038,
+    "settled_route_accuracy_std": 0.013387171457753796,
+    "pulse_route_accuracy": 0.8916725590546795,
+    "pulse_route_accuracy_std": 0.013111460200471027,
+    "mean_used_capacity": 7.777807021073961,
+    "mean_used_capacity_std": 0.8762003940664218
+  },
+  "current_only_no_reset": {
+    "route_accuracy": 0.4823578455894614,
+    "route_accuracy_std": 0.03223548734920502,
+    "settled_route_accuracy": 0.48119612030671177,
+    "settled_route_accuracy_std": 0.034761858360305646,
+    "pulse_route_accuracy": 0.4856175461267312,
+    "pulse_route_accuracy_std": 0.035266195683919456,
+    "mean_used_capacity": 1.1702051889115719,
+    "mean_used_capacity_std": 0.3599642556750442
+  },
+  "shuffled_delayed_consequence": {
+    "route_accuracy": 0.482482908120727,
+    "route_accuracy_std": 0.09053647752636931,
+    "settled_route_accuracy": 0.48151359976675623,
+    "settled_route_accuracy_std": 0.09284440283842499,
+    "pulse_route_accuracy": 0.535345354127966,
+    "pulse_route_accuracy_std": 0.10334746906977027,
+    "mean_used_capacity": 0.673008164690201,
+    "mean_used_capacity_std": 0.044809622343181685
+  },
+  "smoothed_transition_oracle": {
+    "route_accuracy": 0.9722527930631983,
+    "route_accuracy_std": 0.0026407121210110817
+  },
+  "settings": {
+    "n_seeds": 10,
+    "n_steps": 40000,
+    "train_steps": 28000,
+    "consequence_delay": 6,
+    "switch_hazard": 0.01
+  }
+}
