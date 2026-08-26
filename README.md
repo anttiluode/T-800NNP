@@ -6,16 +6,16 @@ A falsification-first neural architecture experiment descended from:
 - [yrotisopeRweN](https://github.com/anttiluode/yrotisopeRweN): continuous traffic, eligibility, finite structure, recurrence, stable anonymous addresses.
 - [Twensday](https://github.com/anttiluode/Twensday): what useful machine appears if we keep the dynamics instead of reducing everything to a static matrix?
 
-T-800NNP asks a narrower question:
+T-800NNP asks:
 
-> **Can continuously evolving receiver state learn to route temporal signal trains, preserve their events, adapt the routes online, and perform simple temporal computations without backpropagation through the network or through time?**
+> **Can continuously evolving receiver state learn to route temporal signal trains, preserve their events, adapt routes online, and perform temporal computations without backpropagation through the network or through time?**
 
 This is not a biological neuron simulator and not a novelty claim. The code is deliberately small enough to attack.
 
 ## The primitive
 
 ```text
-incoming event train
+incoming temporal traffic
        ↓ broadcast
 persistent receiver states q_j(t)
        ↓
@@ -49,27 +49,29 @@ so a lane cannot acquire unlimited structural strength.
 
 There is no PyTorch, autograd, reverse graph traversal, gradient tape, or BPTT.
 
-The current output learner is deliberately simpler:
+Gate 1/2/3 use an immediate local lane error. Gate 4 adds a stricter delayed-credit primitive:
 
 ```text
-local feature activity
-       ×
-local lane error / consequence
+local receiver feature phi(t)
+       ↓ retain its local address
+six steps pass
        ↓
-local structural update
+consequence for t arrives
        ↓
-project back into finite L1 capacity
+update only the old retained phi(t)
+       ↓
+project routing structure back into finite L1 capacity
 ```
 
-In the present Gate 1/2/3 code the output consequence is immediate, so this is essentially a bounded local delta rule, **not** a solution to deep credit assignment. `LocalStructuralRouter` already contains an eligibility state and consequence queue so delayed-credit attacks can be added without changing the primitive.
+`DelayedLocalStructuralRouter` literally retains old local feature vectors long enough for later consequence to address them. It does **not** differentiate backward through the intervening dynamics. This is still not a general solution to deep credit assignment: the environment supplies a useful route consequence.
 
-The important architectural distinction is:
+The architectural distinction is:
 
 > **the machine does not learn a matrix by differentiating a global loss through a stack; local receiver state creates the coordinates, and local consequence changes bounded routing structure. The matrix is something we can inspect afterward.**
 
-## Signal trains really exist here
+## Gate 0 — signal trains really exist
 
-Gate 0 makes this explicit. The same finite incoming train is delivered to two receivers. One ends its outgoing train exactly with the input; the slower receiver continues firing for four steps after the final incoming event.
+The same finite incoming train is delivered to two receivers. One ends its outgoing train exactly with the input; the slower receiver continues firing for four steps after the final incoming event.
 
 ```text
 incoming       0 0 1 1 1 0 1 0 0 0 0 0 0 0
@@ -101,7 +103,7 @@ route accuracy          0.5144 ± 0.0357
 pulse preservation      0.5183 ± 0.0320
 ```
 
-This earns a narrow result:
+Survives:
 
 > **Present-time-identical events can be routed differently from receiver-carried history, and the original events can be forwarded rather than regenerated.**
 
@@ -120,7 +122,7 @@ new mapping after relearning         0.8068 ± 0.0652
 episodes to recover >= 0.80          128.3 ± 43.7
 ```
 
-So the routes are not frozen lookup tables. Bounded local structure can be reallocated online. The adaptation is slow enough that an ordinary trained recurrent model remains an obvious attacker.
+So the routes are not frozen lookup tables. Bounded local structure can be reallocated online.
 
 ## Gate 3 — temporal XOR
 
@@ -138,11 +140,61 @@ current-only control    0.5002 ± 0.0049
 exact digital delay XOR 1.0000
 ```
 
-This is intentionally not spun as a win over ordinary computing. The exact digital delay solution destroys it.
-
-What survives is smaller:
+The exact digital delay solution destroys the benchmark. What survives is smaller:
 
 > **continuous receiver state plus local nonlinear coordinates can support a genuine nonlinear temporal operation, and a local bounded learner can read it out without backpropagation through time.**
+
+## Gate 4 — NO EPISODES
+
+This gate removes the experimental boundary that remained in Gate 1.
+
+One binary stream runs for 40,000 steps. A hidden temporal law occasionally changes between:
+
+```text
+persistent   P(same next bit) = .90
+alternating  P(same next bit) = .10
+```
+
+There is:
+
+```text
+NO reset at a hidden switch
+NO start-of-train marker
+NO end-of-train marker
+NO change in one-time P(x=1)=.5
+```
+
+The receiver state runs continuously through all changes. The route consequence arrives **six steps late** and is credited to the retained local receiver address from six steps earlier. Learning is frozen after step 28,000; evaluation uses the remaining uninterrupted stream.
+
+10 seeds:
+
+```text
+dynamic, no reset
+route accuracy                 0.8829 ± 0.0119
+settled route accuracy         0.8848 ± 0.0134
+pulse route accuracy           0.8917 ± 0.0131
+
+current-only, no reset
+route accuracy                 0.4824 ± 0.0322
+
+shuffled delayed consequence
+route accuracy                 0.4825 ± 0.0905
+
+explicit smoothed transition attacker
+route accuracy                 0.9723 ± 0.0026
+```
+
+So the no-reset system still does useful temporal routing, and breaking delayed causal address destroys learning. The explicit temporal statistic remains much better.
+
+Survives:
+
+> **A continuously running receiver can infer changing temporal traffic without episode boundaries, and delayed local consequence can carve useful routing structure without BPTT.**
+
+Does **not** survive:
+
+> a claim that the architecture is the best way to solve this temporal inference problem.
+
+The explicit Markov-style attacker wins badly.
 
 ## Run
 
@@ -152,6 +204,7 @@ python experiments/gate0_signal_train.py
 python experiments/gate1_temporal_router.py
 python experiments/gate2_continual_remap.py
 python experiments/gate3_temporal_xor.py
+python experiments/gate4_no_episode_stream.py
 python run_all.py
 python -m unittest discover -s tests
 ```
@@ -162,20 +215,23 @@ Results are written to `results/`.
 
 - biological fidelity;
 - deep credit assignment without a teaching/consequence signal;
-- superiority to RNNs, SSMs, reservoirs, spiking networks, or explicit delay lines;
+- superiority to RNNs, SSMs, reservoirs, spiking networks, or explicit temporal statistics;
 - blind source separation of arbitrary simultaneous mixtures;
 - learned multi-hop routing through a large recurrent population;
+- spontaneous discovery of start/end boundaries as discrete objects;
 - proof that the structural budget is better than ordinary signed weights.
 
 ## Next clean attacks
 
-1. **Delayed consequence.** Deliver route reward only after the train has ended; require eligibility to assign it to earlier traffic.
-2. **Multi-hop population.** Broadcast the same trains into many continuously running receivers with many possible paths. Reward only the correct destination and see whether a selective subgraph grows.
-3. **Mixtures.** Superpose independent temporal train families and test whether different histories carve different routes without source labels at each timestep.
+1. **Multi-hop population.** Broadcast traffic into many continuously running receivers with many possible paths. Reward only the destination and see whether a selective subgraph grows.
+2. **True mixtures.** Superpose independent temporal train families and test whether local history can separate/reroute events without a supplied source identity at every step.
+3. **Boundary emergence.** Add quiet gaps, overlapping bursts and ambiguous switches; ask whether downstream continuation itself supplies an operational notion of train start/end.
 4. **Cut test.** After learning, remove high-capacity paths and verify the operation dies specifically there.
 5. **Ordinary attackers.** Reservoir + linear readout, small GRU/RNN, explicit Markov statistic, and exact delay-feature models.
 6. **Matrix autopsy.** Inspect rank, sparsity, singular spectrum, and state-conditioned effective operators only after the dynamical machine has learned them.
 
-The next milestone is not a prettier matrix. It is:
+The next milestone is no longer merely "remove the reset". Gate 4 did that.
 
-> **temporal traffic carving a selective multi-hop route by local credit while the network never stops running.**
+It is:
+
+> **continuous temporal traffic carving a selective multi-hop route by delayed local credit while the network never stops running.**
