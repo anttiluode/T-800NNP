@@ -1,0 +1,10 @@
+{
+  "incoming": [0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+  "fast_receiver": [0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+  "slow_receiver": [0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
+  "last_input_event": 6,
+  "fast_last_output_event": 6,
+  "slow_last_output_event": 10,
+  "fast_continuation_after_input": 0,
+  "slow_continuation_after_input": 4
+}
